@@ -34,9 +34,11 @@
                     </div>
                 </div>
             </xpath>
+            <!--
             <xpath expr="//field[@name='postpone_max_days']" position="attributes">
                 <attribute name="attrs">{'invisible': [('action_with_unused_accruals', 'not in', ['postponed', 'contract_postponed'])]}</attribute>
             </xpath>
+            -->
         </field>
     </record>
 </odoo>
