@@ -28,6 +28,7 @@ class HolidaysAllocation(models.Model):
             Method called by the cron task in order to increment the number_of_days when
             necessary.
         """
+        print("HELLO start _update_accrual ")
         # Get the current date to determine the start and end of the accrual period
         today = datetime.combine(fields.Date.today(), time(0, 0, 0))
         this_year_first_day = (today + relativedelta(day=1, month=1)).date()
@@ -96,6 +97,7 @@ class HolidaysAllocation(models.Model):
              '|', ('nextcall', '=', False), ('nextcall', '<=', today)])
         allocations._process_accrual_plans()
         print('all allocation : ', allocations)
+        print("HELLO END _update_accrual ")
 
     def _end_of_contract_year_accrual(self, end_of_active_contract, start_of_new_contract):
         today = fields.Date.today()
