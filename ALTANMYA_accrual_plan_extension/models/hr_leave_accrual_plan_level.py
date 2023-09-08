@@ -36,6 +36,9 @@ class AccrualPlanLevel(models.Model):
         [('day', 'day(s)'),
          ('month', 'month(s)')],
         default='day', string=" ")
+    # !! added postpone max days record to accrual plan level
+    postpone_max_days = fields.Integer("Maximum amount of accruals to transfer",
+        help="Set a maximum of days an allocation keeps at the end of the year. 0 for no limit.")
 
     # @api.depends('start_count', 'start_type', 'contract_start_count', 'contract_start_type')
     # def _compute_sequence(self):
