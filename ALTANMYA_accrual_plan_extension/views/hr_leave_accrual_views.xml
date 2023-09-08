@@ -33,12 +33,16 @@
                         <label for="grace_type" string="" class="o_form_label"/>
                     </div>
                 </div>
+                <label for="postpone_max_days" attrs="{'invisible': [('action_with_unused_accruals', 'not in', ['postponed', 'contract_postponed'])]}"/>
+                <div class="o_col" attrs="{'invisible': [('action_with_unused_accruals', 'not in', ['postponed', 'contract_postponed'])]}">
+                    <div class="o_row">
+                        <field name="postpone_max_days"/>
+                    </div>
+                </div>
             </xpath>
-            <!--
-            <xpath expr="//field[@name='postpone_max_days']" position="attributes">
-                <attribute name="attrs">{'invisible': [('action_with_unused_accruals', 'not in', ['postponed', 'contract_postponed'])]}</attribute>
-            </xpath>
-            -->
+<!--            <xpath expr="//field[@name='postpone_max_days']" position="attributes">-->
+<!--                <attribute name="attrs">{'invisible': [('action_with_unused_accruals', 'not in', ['postponed', 'contract_postponed'])]}</attribute>-->
+<!--            </xpath>-->
         </field>
     </record>
 </odoo>
