@@ -12,5 +12,5 @@ class Device(models.Model):
       device_dwmode=fields.Selection([('read', 'Read'),('delete', 'Delete')],string='Mode',default='read')
       last_seq =fields.Integer('last sequence')
       treat_seq=fields.Integer('handle from')
-      att_seq=fields.Integer('attendance from')
+      att_seq=fields.Integer('attendance from')  # not used and could be deleted
       download_date=fields.Datetime(string='Date/time')

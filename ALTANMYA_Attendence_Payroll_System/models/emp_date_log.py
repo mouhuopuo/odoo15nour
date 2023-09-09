@@ -3,10 +3,10 @@ from odoo import api, fields, models, tools
 class empdatelog(models.Model):
     _name = "emp.date.log"
     _auto = False
-    inout_id = fields.Many2one('od.inout', 'inout_id', index=True)
-    log_seq = fields.Integer(string='Sequence', index=True)
-    log_date = fields.Datetime(string='Date/time', index=True)
-    log_device = fields.Many2one('od.device', 'device', index=True)
+    inout_id = fields.Many2one('od.inout', 'inout_id',index=True)
+    log_seq = fields.Integer(string='Sequence')
+    log_date = fields.Datetime(string='Date/time')
+    log_device = fields.Many2one('od.device', 'device')
 
     def name_get(self):
         lst = []

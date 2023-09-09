@@ -9,6 +9,7 @@ class ExtendEmp(models.Model):
     att_mode = fields.Selection([('standard', 'Standard mode'), ('daily', 'Daily mode'), ('classic', 'Classic mode'),
                                  ('sequential', 'Sequential mode'), ('shift', 'Shift mode')], string='Attendance Mode',
                                 index=True)
+    is_worker =fields.Boolean(string= 'Is worker?')
     # att_lines=fields.One2many('od.inout','empid',string='Employee attendance')
 
 class ExtendEmpPub(models.Model):

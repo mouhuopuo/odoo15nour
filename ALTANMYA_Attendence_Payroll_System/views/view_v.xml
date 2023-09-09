@@ -306,6 +306,27 @@
      </record>
 
 
+    <record model="ir.ui.view" id="v_process_attendance_date_wizard">
+        <field name="name">Date to process attendance</field>
+        <field name="model">process.attendance.date.wizard</field>
+        <field name="type">form</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <span>Please pick up a date that the attendance will be processed to. </span>
+                </group>
+    <group>
+      <field name="to_date"  string="Process to Date"/>
+
+    </group>
+                <footer>
+                    <button string="Cancel" special="cancel" class="oe_highlight"/>
+                     <button name="process_to_date" string="Start processing" type="object" class="oe_highlight" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
     </data>
     <data noupdate="1">
      <record model="od.fp.settings" id="altanmya_fgp_approval_level">
@@ -316,6 +337,33 @@
          <field name="setting_name">warning duration</field>
          <field name="setting_value">1</field>
      </record>
+     <record model="od.fp.settings" id="altanmya_fgp_biostar_mode">
+         <field name="setting_name">biostar mode</field>
+         <field name="setting_value">0</field>
+     </record>
+     <record model="od.fp.settings" id="altanmya_fgp_biostar_index">
+         <field name="setting_name">biostar index</field>
+         <field name="setting_value">0</field>
+     </record>
+
+     <record model="od.fp.settings" id="altanmya_fgp_biostar_ip">
+         <field name="setting_name">biostar ip</field>
+         <field name="setting_value_text">0.0.0.0</field>
+     </record>
+     <record model="od.fp.settings" id="altanmya_fgp_biostar_session">
+         <field name="setting_name">biostar session</field>
+         <field name="setting_value_text">0</field>
+     </record>
+     <record model="od.fp.settings" id="altanmya_fgp_biostar_user">
+         <field name="setting_name">biostar user</field>
+         <field name="setting_value_text">admin</field>
+     </record>
+     <record model="od.fp.settings" id="altanmya_fgp_biostar_password">
+         <field name="setting_name">biostar password</field>
+         <field name="setting_value_text">1234</field>
+     </record>
+
+
     </data>
 
     </odoo>

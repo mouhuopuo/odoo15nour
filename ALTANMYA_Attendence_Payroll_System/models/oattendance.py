@@ -1,12 +1,12 @@
 import time
 
 import odoo.exceptions
-from odoo import models, fields
+from odoo import models, fields,Command
 from .zkd import ZK
 from .suprema import download as downloadsup2
 from datetime import datetime, timedelta
 import pytz
-
+from .biostar import get_events as bio_get_events
 
 class Attendance(models.Model):
     _name = 'od.attendance'
@@ -16,6 +16,7 @@ class Attendance(models.Model):
     log_userid = fields.Integer(string='User', index=True)
     log_date = fields.Datetime(string='Date/time', index=True)
     log_device = fields.Many2one('od.device', 'device', index=True)
+    log_status =fields.Selection([('enter','Enter'),('exit','Exit'),('unknown','Unknown')])
 
     def action_process(self):
         rec_settings=self.env['od.fp.settings'].sudo().search([('setting_name', '=', 'Source mode')], limit=1)
@@ -44,18 +45,33 @@ class Attendance(models.Model):
                 },
             }
             return notification
-        elif self.handle_all_cases():
-            notification = {
-                'type': 'ir.actions.client',
-                'tag': 'display_notification',
-                'params': {
-                    'title': ('Finger prints'),
-                    'message': 'Attendance Process is completed successfully',
-                    'type': 'success',  # types: success,warning,danger,info
-                    'sticky': False,  # True/False will display for few seconds if false
-                },
+        else:
+            view_id = self.env['process.attendance.date.wizard']
+            dd= (datetime.now() + timedelta(days=-2)).strftime('%Y-%m-%d')
+            params = {'to_date': dd}
+            attconfirm = view_id.create(params)
+            return {
+                'type': 'ir.actions.act_window',
+                'name': 'Info : Clicking start processing to determine the time of entry and exit for each employee respecting their shifts',
+                'res_model': 'process.attendance.date.wizard',
+                'view_type': 'form',
+                'view_mode': 'form',
+                'res_id': attconfirm.id,
+                'view_id': self.env.ref('ALTANMYA_Attendence_Payroll_System.v_process_attendance_date_wizard', False).id,
+                'target': 'new',
             }
-            return notification
+        # elif self.handle_all_cases():
+        #     notification = {
+        #         'type': 'ir.actions.client',
+        #         'tag': 'display_notification',
+        #         'params': {
+        #             'title': ('Finger prints'),
+        #             'message': 'Attendance Process is completed successfully',
+        #             'type': 'success',  # types: success,warning,danger,info
+        #             'sticky': False,  # True/False will display for few seconds if false
+        #         },
+        #     }
+        #     return notification
 
     def action_transfer(self):
         rec_settings=self.env['od.fp.settings'].sudo().search([('setting_name', '=', 'Source mode')], limit=1)
@@ -86,33 +102,118 @@ class Attendance(models.Model):
 
     # download data and fill the log table using longthread function
     def action_start(self):
-
-        if self.longthread():
-            notification = {
-                'type': 'ir.actions.client',
-                'tag': 'display_notification',
-                'params': {
-                    'title': ('Finger prints'),
-                    'message': 'Download is done',
-                    'type': 'success',  # types: success,warning,danger,info
-                    'sticky': False,  # True/False will display for few seconds if false
-                },
-            }
-            return notification
+        bio_mode=self.get_setting('biostar mode')
+        if not bio_mode:
+            if self.longthread():
+                notification = {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': ('Finger prints'),
+                        'message': 'Download is done',
+                        'type': 'success',  # types: success,warning,danger,info
+                        'sticky': False,  # True/False will display for few seconds if false
+                    },
+                }
+                return notification
+            else:
+                notification = {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': ('Finger prints'),
+                        'message': 'Download in failed',
+                        'type': 'warning',  # types: success,warning,danger,info
+                        'sticky': False,  # True/False will display for few seconds if false
+                    },
+                }
+                return notification
         else:
-            notification = {
-                'type': 'ir.actions.client',
-                'tag': 'display_notification',
-                'params': {
-                    'title': ('Finger prints'),
-                    'message': 'Download in failed',
-                    'type': 'warning',  # types: success,warning,danger,info
-                    'sticky': False,  # True/False will display for few seconds if false
-                },
-            }
-            return notification
+            res = self.env['od.device'].search([])
+            for dd in res:
+                if (dd.device_enables):
+                    atts_t = None
+                    nseq = 0
+                    if dd.last_seq:
+                        nseq = dd.last_seq
+                    atts_t = bio_get_events(self.env,dd.device_name, nseq)
+
+                    if atts_t and 'error' in atts_t[0]:
+                        notification = {
+                            'type': 'ir.actions.client',
+                            'tag': 'display_notification',
+                            'params': {
+                                'title': ('Finger prints'),
+                                'message': 'Failaure: ' + atts_t[0]['error'],
+                                'type': 'warning',  # types: success,warning,danger,info
+                                'sticky': True,  # True/False will display for few seconds if false
+                            },
+                        }
+                        return notification
+                    else:
+                        numrecc = len(atts_t)
+                        if atts_t:
+                            # self._cr.autocommit(False)
+                            try:
+
+                                seqdate = None
+                                for eachrec in atts_t:
+                                    # print(eachrec['ID'])
+                                  #  print(eachrec['datetime'])
+                                    seqdate = datetime.strptime(eachrec['datetime'], '%Y-%m-%dT%H:%M:%S.00Z')
+                                    if int(eachrec.get('index')) > nseq:
+                                        nseq = int(eachrec.get('index'))
+                                        # # index_settings[0].update({'setting_value': nseq})
+                                        # self.save_setting('biostar index', nseq)
+
+                                    stat = 'enter'
+                                    if int(eachrec['status'] == 1):
+                                        stat = 'enter'
+                                    else:
+                                        stat = 'exit'
+
+                                    if (eachrec['user_id'] and int(eachrec['user_id']) != 0):
+                                        super(Attendance, self).create({'log_seq': eachrec['index'],
+                                                                        'log_userid': eachrec['user_id'],
+                                                                        'log_date': seqdate,  # correct date
+                                                                        'log_status': stat,
+                                                                        })
+
+                                self._cr.commit()
+                                if nseq > 0:
+                                    dd.update({'last_seq': nseq, 'download_date': seqdate})
+                            except Exception as ex:
+                                notification = {
+                                    'type': 'ir.actions.client',
+                                    'tag': 'display_notification',
+                                    'params': {
+                                        'title': ('Finger prints' + str(numrecc)),
+                                        'message': 'Download in failed '+dd.device_name + ' '+ str(ex),
+                                        'type': 'warning',  # types: success,warning,danger,info
+                                        'sticky': True,  # True/False will display for few seconds if false
+                                    },
+                                }
+                                return notification
+            if len(res):
+                qry = f"update od_fp_settings set setting_value_text='{str(datetime.now() + timedelta(hours=3))}' where setting_name='last download'"
+                self._cr.execute(qry)
+                if not self._cr.rowcount:
+                    self._cr.execute(
+                        f"insert into od_fp_settings (setting_name,setting_value_text) values ('last download','{str(datetime.now() + timedelta(hours=3))}') ")
+                    notification = {
+                        'type': 'ir.actions.client',
+                        'tag': 'display_notification',
+                        'params': {
+                            'title': ('Finger prints'),
+                            'message': 'Download is done',
+                            'type': 'success',  # types: success,warning,danger,info
+                            'sticky': False,  # True/False will display for few seconds if false
+                        },
+                    }
+                    return notification
 
     def longthread(self):
+
         try:
             # print('entered....................')
 
@@ -123,22 +224,31 @@ class Attendance(models.Model):
                 if (dd.device_enables):
                     atts_t = None
                     lastseq = 0
-                    if dd.last_seq:
+                    if dd.last_seq>0:
                         lastseq = dd.last_seq
                     if dd.device_model == 'zk':
                         atts_t = self.downloadzk(dd.device_name, dd.device_port)
                         if atts_t:
                             # self._cr.autocommit(False)
-
+                            diff_hour_device=0
+                            rec_settings2 = self.env['od.fp.settings'].sudo().search([('setting_name', '=', dd.device_name)],
+                                                                                    limit=1)
+                            if rec_settings2:
+                                diff_hour_device =  rec_settings2.setting_value
                             nseq = 0
                             seqdate = None
                             for eachrec in atts_t:
                                 nseq += 1
                                 LineNUMBER=1
                                 seqdate = eachrec.timestamp
+                                seqdate += timedelta(hours=diff_hour_device)
+                                # zkdate= datetime(seqdate.year, seqdate.month, seqdate.day,seqdate.hour+diff_hour_device, seqdate.minute,0,0)
                                 LineNUMBER=2
                                 #  if seqdate >= datetime(year=seqdate.year, month=3, day=29) and seqdate <= datetime(year=seqdate.year, month=10, day=28):
-                                #    seqdate+=timedelta(hours=-1)
+                                # if diff_hour_device>=0:
+                                #   seqdate+=timedelta(hour=diff_hour_device)
+                                # else:
+                                #   seqdate -= timedelta(hour=-1*diff_hour_device)
                                 if nseq > lastseq:
                                     super(Attendance, self).create({'log_seq': nseq,
                                                                     'log_userid': eachrec.user_id,
@@ -150,9 +260,6 @@ class Attendance(models.Model):
                             self._cr.commit()
                     elif dd.device_model == 'suprema':
                         atts_t = []
-                        lastseq = 0
-                        if dd.last_seq:
-                            lastseq = dd.last_seq
 
                         # print('show me1111111')
                         rec_settings = self.env['od.fp.settings'].sudo().search([('setting_name', '=', 'suprema')],
@@ -171,12 +278,13 @@ class Attendance(models.Model):
                         #     print(str(x['ID'])+'------'+str(x['userID']) + '-----' + str(datetime.fromtimestamp(x['timestamp'])))
                         if atts_t:
                             # self._cr.autocommit(False)
-                            nseq=0
+                            nseq=lastseq+1
                             seqdate = None
                             for eachrec in atts_t:
                                 # print(eachrec['ID'])
                                 seqdate =datetime.fromtimestamp( eachrec['timestamp'])
-                                nseq=eachrec['ID']
+                                if eachrec['ID']>nseq:
+                                    nseq=eachrec['ID']
                                 super(Attendance, self).create({'log_seq': nseq,
                                                                     'log_userid': eachrec['userID'],
                                                                     'log_date': seqdate, # correct date
@@ -195,28 +303,6 @@ class Attendance(models.Model):
 
             # raise Warning()
             return False
-
-    # def handleinout(self,atts):
-    #     attsort = sorted(atts, key=lambda x: (x.user_id, x.timestamp))
-    #     for eachirec in attsort:
-    #         att_emp=self.env['hr.employee'].search([('studio_employee_number','=',eachirec.user_id)], limit=1)
-    #         if att_emp:
-    #             inoutatt=self.env['hr.attendance'].search(
-    #             [('employee_id', '=', att_emp[0].id), ('check_out', '=', False), ('check_in', '!=', False)],
-    #             limit=1)
-    #             if inoutatt:
-    #                 inoutatt[0].update({'check_out': eachirec.timestamp})
-    #             else:
-    #                 self.env['hr.attendance'].create({'employee_id': att_emp[0].id, 'check_in': eachirec.timestamp })
-    #
-    #         inoutrec = self.env['od.inout'].search(
-    #             [('emp_deviceno', '=', eachirec.user_id), ('date_out', '=', False), ('date_in', '!=', False)],
-    #             limit=1)
-    #         if inoutrec:
-    #             inoutrec[0].update({'date_out': eachirec.timestamp})
-    #         else:
-    #             self.env['od.inout'].create({'emp_deviceno': eachirec.user_id, 'date_in': eachirec.timestamp})
-    #
 
     def handledata_attendance(self):
         new_cr = self.pool.cursor()
@@ -271,8 +357,7 @@ class Attendance(models.Model):
 
             new_cr.commit()
         return True
-
-    # classic handle data for all users (depricated)
+    # classic handle data for all users (depricated) and not referenced (safe to delete)
     def handledata(self):
         new_cr = self._cr
         query = """select od_attendance.* from od_attendance 
@@ -293,7 +378,7 @@ class Attendance(models.Model):
         return True
 
     # classic handle data
-    def handle_all_cases(self):
+    def handle_all_cases(self,todate=datetime.now().strftime('%Y-%m-%d')):
         # user_tz = self.env.user.tz
 
         diff_hour=-3
@@ -317,8 +402,8 @@ class Attendance(models.Model):
         if not last_date_rec:
             fromdate = (datetime.now() + timedelta(days=-150)).strftime('%Y-%m-%d')
         else:
-            fromdate = (last_date_rec + timedelta(days=-10)).strftime('%Y-%m-%d')
-        todate = datetime.now().strftime('%Y-%m-%d')
+            fromdate = (last_date_rec).strftime('%Y-%m-%d')
+        # todate = datetime.now().strftime('%Y-%m-%d')
 
         new_cr = self._cr
         self.handledata_sequential()
@@ -330,9 +415,15 @@ class Attendance(models.Model):
           """)
         self.handledata_classic(diff_hour, fromdate)
         self.handledata_standard(fromdate, todate,diff_hour)
-        self.handledata_shift(fromdate, todate,diff_hour)
-        self.fix_conflicts(fromdate, todate)
+        bio_mode = self.get_setting('biostar mode')
+        if not bio_mode:
+            self.handledata_shift(fromdate, todate,diff_hour)
+        else:
+            self.handledata_shift_processed(fromdate, todate, diff_hour)
 
+        self.fix_conflicts(fromdate, todate)
+        print('sdfffffffffffffffffffffffffffff')
+        print(todate)
         new_cr.execute("update od_device set treat_seq=last_seq")
         qry = f"update od_fp_settings set setting_value={self.to_integer(todate)} where setting_name='last_date'"
         # print(qry)
@@ -558,7 +649,7 @@ and not exists (
 	) as fin inner join (select * from hr_employee where studio_employee_number is not null and att_mode='shift' ) as emp on fin.calendar_id=emp.resource_calendar_id
 
 left join (select w.* from hr_work_entry w
-inner join hr_work_entry_type t on w.work_entry_type_id=t.id where t.is_leave=true and w.active=true) ww on (ww.date_start::date=fin.dt and ww.employee_id=emp.id 
+inner join hr_work_entry_type t on w.work_entry_type_id=t.id where t.is_leave=true and w.active=true) ww on (ww.date_startedate=fin.dt and ww.employee_id=emp.id 
 and  ((ww.date_start>= fin.point0 and ww.date_start<fin.point1) or (ww.date_stop>= fin.point0 and ww.date_stop<fin.point1)  )
 		)
 	) z 
@@ -649,7 +740,8 @@ SELECT dt,dur,point1 as point, 1 as check,
 ) as t left join od_attendance
 on (t.studio_employee_number =od_attendance.log_userid
 	and t.point-  (interval '1 hours'*COALESCE(delay_early,0)) <=od_attendance.log_date
-	and t.point+  (interval '1 hours'*COALESCE(delay_late,0)) >=od_attendance.log_date)
+	and t.point+  (interval '1 hours'*COALESCE(delay_late,0)) >=od_attendance.log_date
+	 )
 group by t.dt, t.studio_employee_number,t.id,t.point,t.check,t.leavecase
 ) as res
 group by res.dt, res.studio_employee_number,res.id,res.leavecase
@@ -672,7 +764,231 @@ qq.id=temp_stuff.id and qq.dt=temp_stuff.dt and qq.leavecase=temp_stuff.leavecas
         # print(query)
         new_cr.execute(query)
         new_cr.execute("delete from od_inout where (date_in is null and date_out is null) or (date_inflag='setting' and date_outflag='setting')")
+        new_cr.execute("delete from od_inout where ((date_in = date_out ) and  shift_id is null)")
         new_cr.commit()
+
+
+        # new_cr.autocommit(True)
+        return True
+
+    def handledata_shift_processed(self, fromdate, todate,diff_h):
+        new_cr = self._cr
+        # new_cr.autocommit(False)
+        # print('------------')
+        # print(diff_h)
+        auto = self.get_setting('AUTO_SHIFT')
+        if not (auto == 1 or auto == 0):
+            self.save_setting('AUTO_SHIFT', 0)
+
+        datin_out = "fres.datin,fres.datout"
+        datflg = "'internal','internal'"
+        if auto == 1:
+            datin_out = f"COALESCE(fres.datin,fres.chkin+interval '-1 hours'*{diff_h}),COALESCE(fres.datout,fres.chkout+interval '-1 hours'*{diff_h})"
+            datflg = "case when fres.datin is null then 'setting' else 'internal' end,case when fres.datout is null then 'setting' else 'internal' end"
+
+        query = "DROP TABLE IF EXISTS temp_stuff"
+        new_cr.execute(query)
+        query = f"""
+        CREATE TEMPORARY TABLE temp_stuff as
+        select z.dt,
+        case when  z.date_start<=z.point0  then z.date_stop else z.point0 end point0,
+        case when  z.date_stop>=z.point1 or (z.date_start>z.point0 and z.date_stop<z.point1) then z.date_start else z.point1 end point1,
+        case when  z.date_start<=z.point0  then z.leav_delay    else z.tol_in_early end tol_in_early,
+        case when  z.date_start<=z.point0  then z.leav_delay      else z.tol_in_late  end tol_in_late ,
+        case when  z.date_stop>=z.point1 or (z.date_start>z.point0 and z.date_stop<z.point1) then  z.leav_delay     else z.tol_out_early end tol_out_early,
+        case when  z.date_stop>=z.point1 or (z.date_start>z.point0 and z.date_stop<z.point1) then  z.leav_delay     else z.tol_out_over end tol_out_over   ,
+        z.id ,
+        z.calendar_id ,
+        z.studio_employee_number,extract(epoch from (
+        (case when   z.date_stop>=z.point1 then z.date_start else z.point1 end)  -
+        (case when  z.date_start<=z.point0 then z.date_stop else z.point0 end ) ))/3600 dur,
+        case when  z.date_start is null then 0
+                 when  z.date_start<=z.point0 then 1
+                 when   z.date_stop>=z.point1 then 2
+                 else 3
+                 end leavecase
+        from
+        (
+        Select fin.*,emp.studio_employee_number,emp.id empid,ww.date_start,ww.date_stop,extract(epoch from (ww.date_stop  - ww.date_start))/7200 leav_delay  from
+        (
+        select S.dt,S.dt+interval '1 hours'*(C.hour_from )+interval '1 hours'*{diff_h}  as point0,
+        case when COALESCE(C.duration,0) =0 then
+          S.dt+ interval '1 hours'*(C.hour_to) 
+          else 
+          S.dt+  interval '1 hours'*(C.hour_from+C.duration) 
+          end+interval '1 hours'*{diff_h} as point1,C.tol_in_early ,C.tol_in_late ,C.tol_out_early,C.tol_out_over ,C.id,C.calendar_id from
+        (select G.dt,extract(isodow from G.dt) - 1 as dayofweek,  ((cast(to_char( dt+interval '0 day' ,'J') as integer))/7) %2 as iweek
+         from (SELECT  generate_series('{fromdate}'::timestamp,'{todate}', '1 days') as dt) as G) as S
+        inner join
+        (select 
+         case when CC.tol_in_early>0 then CC.tol_in_early else COALESCE(RC.tol_in_early,0) end as tol_in_early 
+         ,case when CC.tol_in_late>0 then CC.tol_in_late else COALESCE(RC.tol_in_late,0) end as   tol_in_late 
+         ,case when CC.tol_out_early>0 then CC.tol_out_early else COALESCE(RC.tol_out_early,0) end as   tol_out_early
+         ,case when CC.tol_out_over>0 then CC.tol_out_over else COALESCE(RC.tol_out_over,0) end as   tol_out_over 
+         ,CC.id,CC.calendar_id,  CC.hour_from ,CC.duration,CC.hour_to,CC.week_type,CC.dayofweek
+         ,CC.date_to,CC.date_from
+         from resource_calendar_attendance as CC inner join resource_calendar as RC on CC.calendar_id=RC.id) as C
+        on ((cast(C.dayofweek as integer)=S.dayofweek) and (C.week_type is null or cast( C.week_type as integer)=S.iweek) )
+        where
+
+        (date_to is  null and S.dt>=date_from) 
+        or ( date_from is null  and S.dt<=date_to) 
+        or ( S.dt>=date_from  and S.dt<=date_to) 
+        or ( (date_from is null and date_to is null)												   
+        and not exists (
+        	select 1 from resource_calendar_attendance as sq
+        	where sq.calendar_id=C.calendar_id and sq.dayofweek=c.dayofweek and 
+        	( (S.dt>=sq.date_from and s.dt<=sq.date_to) 
+        	or (S.dt>=sq.date_from and sq.date_to is null)
+            or (sq.date_from is null and s.dt<=sq.date_to))
+          )
+        )
+        	) as fin inner join (select * from hr_employee where studio_employee_number is not null and att_mode='shift' ) as emp on fin.calendar_id=emp.resource_calendar_id
+
+        left join (select w.* from hr_work_entry w
+        inner join hr_work_entry_type t on w.work_entry_type_id=t.id where t.is_leave=true and w.active=true) ww on (ww.date_start::date=fin.dt and ww.employee_id=emp.id 
+        and  ((ww.date_start>= fin.point0 and ww.date_start<fin.point1) or (ww.date_stop>= fin.point0 and ww.date_stop<fin.point1)  )
+        		)
+        	) z 
+                """
+
+        print(query)
+        new_cr.execute(query)
+        query = f"""
+        insert into  temp_stuff
+        select z.dt,
+        z.date_stop point0,
+        z.point1,
+        z.in_delay tol_in_early ,
+        z.in_delay tol_in_late ,
+        z.out_delay tol_out_early ,
+        z.out_delay tol_out_over ,
+        z.id ,
+        z.calendar_id ,
+        z.studio_employee_number,extract(epoch from (
+        z.point1  - z.date_stop ))/3600 dur,
+        4 leavecase
+        from
+        (
+        Select fin.*,emp.studio_employee_number,emp.id empid,ww.date_start,ww.date_stop,extract(epoch from (ww.date_start  - fin.point0))/7200 in_delay ,extract(epoch from (fin.point1  - ww.date_stop))/7200 out_delay from
+        (
+        select S.dt,S.dt+interval '1 hours'*(C.hour_from )+interval '1 hours'*{diff_h}  as point0,
+        case when COALESCE(C.duration,0) =0 then
+          S.dt+ interval '1 hours'*(C.hour_to) 
+          else 
+          S.dt+  interval '1 hours'*(C.hour_from+C.duration) 
+          end+interval '1 hours'*{diff_h} as point1,C.tol_in_early ,C.tol_in_late ,C.tol_out_early,C.tol_out_over ,C.id,C.calendar_id from
+        (select G.dt,extract(isodow from G.dt) - 1 as dayofweek,  ((cast(to_char( dt+interval '0 day' ,'J') as integer))/7) %2 as iweek
+         from (SELECT  generate_series('{fromdate}'::timestamp,'{todate}', '1 days') as dt) as G) as S
+        inner join
+        (select 
+         case when CC.tol_in_early>0 then CC.tol_in_early else COALESCE(RC.tol_in_early,0) end as tol_in_early 
+         ,case when CC.tol_in_late>0 then CC.tol_in_late else COALESCE(RC.tol_in_late,0) end as   tol_in_late 
+         ,case when CC.tol_out_early>0 then CC.tol_out_early else COALESCE(RC.tol_out_early,0) end as   tol_out_early
+         ,case when CC.tol_out_over>0 then CC.tol_out_over else COALESCE(RC.tol_out_over,0) end as   tol_out_over 
+         ,CC.id,CC.calendar_id,  CC.hour_from ,CC.duration,CC.hour_to,CC.week_type,CC.dayofweek
+         ,CC.date_to,CC.date_from
+         from resource_calendar_attendance as CC inner join resource_calendar as RC on CC.calendar_id=RC.id) as C
+        on ((cast(C.dayofweek as integer)=S.dayofweek) and (C.week_type is null or cast( C.week_type as integer)=S.iweek) )
+        where
+
+        (date_to is  null and S.dt>=date_from) 
+        or ( date_from is null  and S.dt<=date_to) 
+        or ( S.dt>=date_from  and S.dt<=date_to) 
+        or ( (date_from is null and date_to is null)												   
+        and not exists (
+        	select 1 from resource_calendar_attendance as sq
+        	where sq.calendar_id=C.calendar_id and sq.dayofweek=c.dayofweek and 
+        	( (S.dt>=sq.date_from and s.dt<=sq.date_to) 
+        	or (S.dt>=sq.date_from and sq.date_to is null)
+            or (sq.date_from is null and s.dt<=sq.date_to))
+          )
+        )
+        	) as fin inner join (select * from hr_employee where studio_employee_number is not null and att_mode='shift' ) as emp on fin.calendar_id=emp.resource_calendar_id
+
+        inner join (select w.* from hr_work_entry w
+        inner join hr_work_entry_type t on w.work_entry_type_id=t.id where t.is_leave=true and w.active=true) ww on (ww.date_start::date=fin.dt and ww.employee_id=emp.id 
+        and  ((ww.date_start> fin.point0 and ww.date_stop<fin.point1)   )
+        		)
+        	) z
+        """
+        new_cr.execute(query)
+        print(query)
+        query = f"""
+        insert into od_inout (emp_deviceno,date_in,date_out,shift_id,date_inflag,date_outflag,att_date,att_leave,os_in,os_out)
+        select qq.*,temp_stuff.point0,temp_stuff.point1 from (
+        select fres.studio_employee_number,{datin_out},fres.id,{datflg},fres.dt,fres.leavecase from ( 
+        select res.studio_employee_number,min(case when res.check = 0 then res.check_date end) as datin,max(case when res.check = 1 then res.check_date end) as datout,res.id,min(res.point) as chkin,max(res.point) as chkout,res.dt,res.leavecase from
+        (
+        select t.dt, t.studio_employee_number,t.id,(t.point+interval '1 hours'*{diff_h}) as point,t.check,
+        case  when t.check=0 then min(date_trunc('minute',od_attendance.log_date)) else max(date_trunc('minute',od_attendance.log_date)) end as check_date
+        ,t.leavecase
+        from
+        (
+        SELECT dt,dur,point0 as point, 0 as check,
+            id,studio_employee_number, tol_in_early as delay_early
+            , tol_in_late  as delay_late, leavecase
+        	FROM temp_stuff
+        union
+        SELECT dt,dur,point1 as point, 1 as check,
+            id,studio_employee_number, tol_out_early   as delay_early
+            , tol_out_over   as delay_late,leavecase
+        	FROM temp_stuff
+        ) as t left join od_attendance
+        on (t.studio_employee_number =od_attendance.log_userid
+        	and t.point-  (interval '1 hours'*COALESCE(delay_early,0)) <=od_attendance.log_date
+        	and t.point+  (interval '1 hours'*COALESCE(delay_late,0)) >=od_attendance.log_date)
+        	and ((t.check=0 and od_attendance.log_status='enter') or (t.check=1 and od_attendance.log_status='exit') ) 
+        group by t.dt, t.studio_employee_number,t.id,t.point,t.check,t.leavecase
+        ) as res
+        group by res.dt, res.studio_employee_number,res.id,res.leavecase
+        ) as fres
+        union
+        select z.log_userid,date_trunc('minute',z.date_in),date_trunc('minute',z.date_out),null,null,null,z.dt,0 from
+        (select log_userid,min(log_date) as date_in ,max(log_date) as date_out,log_date::date as dt from od_attendance
+         inner join hr_employee on hr_employee.studio_employee_number=od_attendance.log_userid
+         where log_date >='{fromdate}' and log_date <='{todate}'
+         group by log_userid,log_date::date
+        ) as z
+        left join temp_stuff on z.dt=temp_stuff.dt and z.log_userid= temp_stuff.studio_employee_number
+        where temp_stuff.studio_employee_number is null
+        ) as qq left join temp_stuff on (qq.studio_employee_number=temp_stuff.studio_employee_number and
+        qq.id=temp_stuff.id and qq.dt=temp_stuff.dt and qq.leavecase=temp_stuff.leavecase)
+        """
+        # where fres.datin is not null or fres.datout is not null
+        # print(query)
+        print('query------2')
+        print(query)
+        new_cr.execute(query)
+        new_cr.execute(
+            "delete from od_inout where (date_in is null and date_out is null) or (date_inflag='setting' and date_outflag='setting')")
+        new_cr.execute("delete from od_inout where ((date_in = date_out ) and  shift_id is null)")
+        query = f"""
+        insert into od_inout (emp_deviceno,date_in,date_out,att_date)
+         select oa.log_userid, oa.log_in,oa.log_out, date_trunc('day',oa.log_in) from 
+        (
+        select event_in.log_userid , date_trunc('minute',event_in.log_date) as log_in,date_trunc('minute',event_out.log_date) as log_out
+        from 
+        (
+        select b.log_date,b.log_userid,max(b.log_date) OVER w AS next_in from od_attendance as b
+        where log_status='enter' and log_date>='{fromdate}'
+        WINDOW w AS (PARTITION BY b.log_userid ORDER BY log_date ROWS BETWEEN  1 following and 1 following)
+        ORDER BY log_date) as event_in
+        inner join
+        (select b.log_date,b.log_userid from od_attendance as b
+        where log_status='exit' and log_date>='{fromdate}'
+        ) as event_out on event_in.log_userid=event_out.log_userid  and  event_out.log_date 
+        between event_in.log_date and event_in.next_in) as oa
+        left join (select * from od_inout where att_date>='{fromdate}' ) as oldinout on
+        (oa.log_userid=oldinout.emp_deviceno and oa.log_in= oldinout.date_in)
+       where extract(epoch from( oa.log_out-oa.log_in))<(3600*36)
+        and oldinout.emp_deviceno is null
+         
+        """
+        # {fromdate}
+        new_cr.execute(query)
+        new_cr.commit()
+
         # new_cr.autocommit(True)
         return True
 
@@ -707,7 +1023,7 @@ qq.id=temp_stuff.id and qq.dt=temp_stuff.dt and qq.leavecase=temp_stuff.leavecas
 
     def to_integer(self, dt_time):
 
-        x = dt_time.replace('-', '')
+        x = str(dt_time).replace('-', '')
         return int(x)
 
     def to_date_integer(self, int_dt):
@@ -719,6 +1035,14 @@ qq.id=temp_stuff.id and qq.dt=temp_stuff.dt and qq.leavecase=temp_stuff.leavecas
         rec_settings = self.env['od.fp.settings'].sudo().search([('setting_name', '=', settingname)], limit=1)
         if rec_settings:
             return rec_settings.setting_value
+        else:
+            return None
+
+    def get_setting_text(self, settingname):
+        last_date_rec = None
+        rec_settings = self.env['od.fp.settings'].sudo().search([('setting_name', '=', settingname)], limit=1)
+        if rec_settings:
+            return rec_settings.setting_value_text
         else:
             return None
 

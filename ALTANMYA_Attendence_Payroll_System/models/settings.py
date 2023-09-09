@@ -8,6 +8,16 @@ class module_settings(models.Model):
       setting_value = fields.Integer(string='Value')
       setting_value_text = fields.Char(string='Text value')
 
+      def get_setting(self, settingname):
+        last_date_rec = None
+        # rec_settings = self.env['od.fp.settings'].sudo().search([('setting_name', '=', settingname)], limit=1)
+        rec_settings = self.search([('setting_name', '=', settingname)], limit=1)
+
+        if rec_settings:
+            return rec_settings.setting_value
+        else:
+            return None
+
 class hrattendance_ext(models.Model):
       _inherit = 'hr.attendance'
       _description = 'internal use'

@@ -49,7 +49,7 @@ def download(DEVICE_IP,DEVICE_PORT,from_rec,GATEWAY_IP):
 
 
         stub = bioservice.event_pb2_grpc.EventStub(channel)
-        events =  stub.GetLog(bioservice.event_pb2.GetLogRequest(deviceID=devID, startEventID=from_rec, maxNumOfLog=3000))
+        events =  stub.GetLog(bioservice.event_pb2.GetLogRequest(deviceID=devID, startEventID=from_rec, maxNumOfLog=50000))
         # print(events)
         dict_obj = msgtodic(events)['events']
         # print('xxxxxxxxxxxxxxx33333')

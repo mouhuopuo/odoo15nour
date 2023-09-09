@@ -19,7 +19,7 @@
 ###################################################################################
 {
     'name': 'ALTANMYA Attendance Device Adaptor',
-    'version': '1.9',
+    'version': '3.2',
     'summary': 'This ALTANMYA module integrates Odoo attendance with attendance devices (Suprema and Zk)',
     'description': "End to End process for Attendance Process with devices",
     'category': 'Human Resources/Employees',

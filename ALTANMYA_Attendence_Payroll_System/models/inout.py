@@ -5,14 +5,14 @@ class Inout(models.Model):
       _name = 'od.inout'
       _description = 'Attendance table'
 
-      emp_deviceno = fields.Integer(string='employee id device')
+      emp_deviceno = fields.Integer(string='employee id device',index=True)
       emp_name=fields.Char(string='Employee name',compute='_getname',depends=['emp_deviceno'],store=False)
       date_in = fields.Datetime(string='time in')
       date_out = fields.Datetime(string='time out')
       shift_id = fields.Many2one('resource.calendar.attendance',string='shift')
       date_inflag =fields.Selection([('internal','Internal'),('setting','Setting'),('manuel','Manuel')],string='date in source', default='manuel')
       date_outflag = fields.Selection([('internal','Internal'),('setting','Setting'),('manuel','Manuel')],string='date out source', default='manuel')
-      att_date=fields.Date(string='Attendance date')
+      att_date=fields.Date(string='Attendance date',index=True)
       att_leave = fields.Integer(string="leaving type")
       os_in = fields.Datetime(string='standard time in')
       os_out = fields.Datetime(string='standard time out')
@@ -29,12 +29,13 @@ class Inout(models.Model):
 
           for rec in self:
               ret =False
-              diff=rec.date_out - rec.date_in
-              mmin=(diff.seconds/ 60)
-              if abs( mmin)<wd :
-                  ret=True
+              if (rec.date_out and rec.date_in):
+                  diff=rec.date_out - rec.date_in
+                  mmin=(diff.seconds/ 60)
+                  if abs( mmin)<wd :
+                      ret=True
               rec.matching_flag=ret
-              print('----------matching:----'+str(ret)+'-----'+str(mmin)+'----wd---'+str(wd))
+
 
 
       def _getEmp(self):

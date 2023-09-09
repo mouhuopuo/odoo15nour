@@ -68,7 +68,6 @@ class AttPayRoll(models.Model):
 
               rec = self.browse(rec1)
               lev = rec.approval_level
-              print('ok'+str(lev))
               if ((rec.status == 'draft' or rec.status_u2=='draft') and self.env.user.has_group('ALTANMYA_Attendence_Payroll_System.altanmya_fgp_admin')):
                  rec.status = 'validate'
                  rec.status_u2 = 'validate'
@@ -94,7 +93,6 @@ class AttPayRoll(models.Model):
             for rec1 in self.ids:
               rec = self.browse(rec1)
               lev = rec.approval_level
-              print('no' + str(lev))
               if ((rec.status == 'draft' or rec.status_u2=='draft') and self.env.user.has_group('ALTANMYA_Attendence_Payroll_System.altanmya_fgp_admin')):
                  rec.status = 'reject'
                  rec.status_u2 = 'reject'
@@ -121,7 +119,6 @@ class AttPayRoll(models.Model):
             for rec1 in self.ids:
               rec = self.browse(rec1)
               lev = rec.approval_level
-              print('ok2' + str(lev))
               if ((rec.status2 == 'draft' or rec.status2_u2=='draft') and self.env.user.has_group('ALTANMYA_Attendence_Payroll_System.altanmya_fgp_admin')):
                  rec.status2 = 'validate'
                  rec.status2_u2 = 'validate'
@@ -146,7 +143,6 @@ class AttPayRoll(models.Model):
             for rec1 in self.ids:
               rec = self.browse(rec1)
               lev = rec.approval_level
-              print('ho2' + str(lev))
               if ((rec.status2 == 'draft' or rec.status2_u2=='draft') and self.env.user.has_group('ALTANMYA_Attendence_Payroll_System.altanmya_fgp_admin')):
                  rec.status2 = 'reject'
                  rec.status2_u2 = 'reject'
@@ -206,6 +202,7 @@ class AttPayRoll(models.Model):
                   cod_OVT3=self.env['hr.work.entry.type'].sudo().search([('code', '=', 'OVT3')], limit=1).id
                   cod_OVT4=self.env['hr.work.entry.type'].sudo().search([('code', '=', 'OVT4')], limit=1).id
                   cod_holiday=self.env['hr.work.entry.type'].sudo().search([('code', '=', 'HOLATT')], limit=1).id
+                  cod_holiday2=self.env['hr.work.entry.type'].sudo().search([('code', '=', 'HOLATT2')], limit=1).id
                   cod_weekend=self.env['hr.work.entry.type'].sudo().search([('code', '=', 'WEEKATT')], limit=1).id
                   # leave_delay =rec.shift_id.leave_delay
                   min_in=self.interval_to_int(rec.diff_entry)
@@ -231,7 +228,6 @@ class AttPayRoll(models.Model):
                   att_exit=datetime.combine(rec.att_date, datetime.min.time())+ timedelta(hours=rec.shift_id.hour_to+diff_hour)
 
                   if not rec.shift_id.duration or rec.shift_id.duration ==0:
-
                       att_exit = datetime.combine(rec.att_date, datetime.min.time())+timedelta(hours=rec.shift_id.hour_to+diff_hour)
                   else:
                       att_exit =datetime.combine(rec.att_date, datetime.min.time()) +timedelta(hours=rec.shift_id.duration+diff_hour)
@@ -247,6 +243,7 @@ class AttPayRoll(models.Model):
                   else:
                     if rec.status == 'validate' and rec.status_u2 =='validate'  : # and rec.status2 == 'validate'
                             if min_in<0:
+                                 print('-----1-----')
                                  lat_enter1 =  rec.employee_id.resource_calendar_id.late_enter
                                  lat_enter2 =  rec.employee_id.resource_calendar_id.late_enter2
                                  if lat_enter2<=lat_enter1:
@@ -263,7 +260,8 @@ class AttPayRoll(models.Model):
 
                                  else:
                                        res_entry = rec.date_in + timedelta(minutes=min_in)
-                            else:
+                            elif min_in>0:
+                                  print('-----2-----')
                                   eovt1=rec.employee_id.resource_calendar_id.early_overtime
                                   eovt2=rec.employee_id.resource_calendar_id.early_overtime2
                                   if rec.shift_id.early_overtime2:
@@ -283,12 +281,14 @@ class AttPayRoll(models.Model):
 
                     if rec.status2=='validate' and rec.status2_u2=='validate':
                             if min_out<0:
+                                 print('-----3-----')
                                  if -1*min_out>rec.employee_id.resource_calendar_id.early_exit:
                                        res_exit = rec.date_out
                                        early_exit=rec.date_out + timedelta(minutes=-1*min_out)
                                  else:
                                        res_exit=rec.date_out+timedelta(minutes=-1*min_out)
-                            else:
+                            elif min_out>0:
+                                  print('-----4-----')
                                   ovt1=rec.employee_id.resource_calendar_id.overtime1
                                   ovt2=rec.employee_id.resource_calendar_id.overtime2
                                   if rec.shift_id.overtime2:
@@ -297,6 +297,7 @@ class AttPayRoll(models.Model):
                                       ovt2=None
                                   res_exit = rec.date_out - timedelta(minutes=min_out)
                                   if min_out>ovt1 and  rec.att_leave not in (2,3) :
+                                       print('-----5-----')
                                        bonus_exit1 =rec.date_out
                                        if ovt2:
                                         if ovt2>ovt1 and min_out>ovt2:
@@ -305,15 +306,19 @@ class AttPayRoll(models.Model):
                                            bonus_exit1 = rec.date_out- timedelta(minutes=min_out)+timedelta(minutes=ovt2)
                                            # aux= datetime.combine(att_exit, datetime.min.time())
                                            aux=att_exit+timedelta(minutes=rec.employee_id.resource_calendar_id.full_duration)
-                                           print('------bonus_exit2:--------' + str(bonus_exit2))
-                                           print('------aux:--------'+str(aux))
                                            if ovt2:
                                               if rec.employee_id.resource_calendar_id.enable_full_salary and bonus_exit2 >= aux :
                                                   isFull=True
 
-                  if isHoliday and (rec.status == 'reject' or rec.status2 == 'reject' or rec.status_u2 == 'reject' or rec.status2_u2 == 'reject' ):
+                  if not  rec.shift_id  and (rec.status=='validate' and rec.status2=='validate' and rec.status_u2=='validate' and rec.status2_u2 =='validate'):
+                      flag_mcgi = self.get_setting('mcgi')
+                      if flag_mcgi:
+                          self.mcgi4( rec, cod_holiday,cod_holiday2,  cod_weekend, diff_hour,cod_OVT1,cod_OVT2)
+                  elif rec.shift_id  and isHoliday and (rec.status == 'reject' or rec.status2 == 'reject' or rec.status_u2 == 'reject' or rec.status2_u2 == 'reject' ):
+                      print('-----6-----')
                       pass
-                  elif isHoliday and rec.status=='validate' and rec.status2=='validate' and rec.status_u2=='validate' and rec.status2_u2 =='validate':
+                  elif rec.shift_id  and isHoliday and rec.status=='validate' and rec.status2=='validate' and rec.status_u2=='validate' and rec.status2_u2 =='validate':
+                      print('-----7-----')
                       if isWeekEnd:
                           # Todo: add setting for the next statement to switch between holiday or weekend
                           cod_holiday=cod_weekend
@@ -367,20 +372,13 @@ class AttPayRoll(models.Model):
                       self._cr.execute(qry)
                       flag_mcgi=self.get_setting('mcgi')
                       if flag_mcgi and isHoliday and not isWeekEnd and ((res_entry+timedelta(hours=-1*diff_hour)).day) != ((res_exit+timedelta(hours=-1*diff_hour)).day):
-                          # print('1--------')
-                          # print(res_entry+timedelta(hours=-1*diff_hour))
-                          # print('2--------')
-                          # print(res_exit + timedelta(hours=-1*diff_hour))
-
                           self.mcgi(rec.att_date,cod_holiday,res_entry,res_exit,rec.id,diff_hour,cod_OVT1,cod_OVT2)
-                      # print(qry)
 
-
-
-
-
-
-                  else:
+                      if flag_mcgi and isHoliday and not isWeekEnd:
+                          self.mcgi2(rec,cod_holiday,diff_hour,cod_holiday2)
+                      if flag_mcgi and not rec.shift_id:
+                          print('-----hereeeeee-----')
+                  elif rec.shift_id :
                       res_att_entry=att_entry
                       res_att_exit=att_exit
                       if (rec.status=='validate' and rec.status_u2=='validate') or not att_entry:
@@ -529,13 +527,7 @@ class AttPayRoll(models.Model):
 
       def mcgi(self,att_date,cod_holiday,res_entry,res_exit,id,diff_hour,cod_OVT1,cod_OVT2):
            if (res_entry.day !=res_exit.day):
-               print('res entry')
-               print(res_entry)
-               print('res exit')
-               print(res_exit)
                new_exit=datetime.combine(att_date+timedelta(days=1), datetime.min.time())+timedelta(hours=diff_hour)
-               print('new exit')
-               print(new_exit)
                qry = f"""
                      update hr_work_entry 
                      set date_stop='{new_exit}',
@@ -580,6 +572,221 @@ class AttPayRoll(models.Model):
                           """
                    self._cr.execute(qry)
 
+      def mcgi2(self,rec,cod_holiday,diff_hour,cod_holiday2):
+               new_exit=datetime.combine(rec.att_date+timedelta(days=1), datetime.min.time())+timedelta(hours=diff_hour)
+               qry = f"""
+                     select distinct hr_work_entry.date_start,hr_work_entry.date_stop from  hr_work_entry 
+                     inner join hr_employee on hr_work_entry.employee_id=hr_employee.id
+                     inner join od_attpayroll on 
+                     hr_employee.id=od_attpayroll.employee_id
+                     where work_entry_type_id={cod_holiday} and hr_work_entry.name='holiday attendance {rec.id}'
+                     and hr_employee.is_worker =TRUE
+                     """
+               print(qry)
+               self._cr.execute(qry)
+               values = self._cr.dictfetchall()
+               if values:
+                   print('------------------')
+                   print(values)
+                   for row in values:
+                       print('-----99-----')
+                       if rec.os_in and  rec.os_in> row.get('date_start'):
+                          qry = f"""
+                              insert into hr_work_entry
+                              (name,employee_id,work_entry_type_id,date_start,date_stop,company_id,contract_id,state,active,duration)
+                              select 'holiday attenance2 {rec.id}' ,hr_employee.id,{cod_holiday2},'{row.get('date_start')}'
+                              ,'{rec.os_in}',hr_employee.company_id,hr_employee.contract_id,'draft',true,
+                              EXTRACT(EPOCH FROM (timestamp '{rec.os_in}'-timestamp '{row.get('date_start')}'))/3600
+                              from od_attpayroll inner join hr_employee on 
+                              hr_employee.id=od_attpayroll.employee_id
+                              where od_attpayroll.id={rec.id}
+                              """
+                          # print('====== >')
+                          # print(qry)
+                          print('-----99-----1')
+                          self._cr.execute(qry)
+
+                          qry =f"""
+                             update hr_work_entry set date_start='{rec.os_in}',
+                             duration=EXTRACT(EPOCH FROM (date_stop -timestamp '{rec.os_in}'))/3600
+                              where work_entry_type_id={cod_holiday} and hr_work_entry.name='holiday attendance {rec.id}'
+                          """
+                          self._cr.execute(qry)
+                       if rec.os_out and rec.os_out < row.get('date_stop'):
+                           qry = f"""
+                               insert into hr_work_entry
+                               (name,employee_id,work_entry_type_id,date_start,date_stop,company_id,contract_id,state,active,duration)
+                               select 'holiday attenance2 {rec.id}' ,hr_employee.id,{cod_holiday2},'{rec.os_out}'
+                               ,'{row.get('date_stop')}',hr_employee.company_id,hr_employee.contract_id,'draft',true,
+                               EXTRACT(EPOCH FROM (timestamp '{row.get('date_stop')}'-timestamp '{rec.os_out}'))/3600
+                               from od_attpayroll inner join hr_employee on 
+                               hr_employee.id=od_attpayroll.employee_id
+                               where od_attpayroll.id={rec.id}
+                               """
+                           # print('------------ <')
+                           # print(qry)
+                           print('-----99-----2')
+                           self._cr.execute(qry)
+                           qry = f"""
+                                     update hr_work_entry set date_stop='{rec.os_out}',
+                                     duration=EXTRACT(EPOCH FROM (timestamp '{rec.os_out}' -date_start))/3600
+                                     where work_entry_type_id={cod_holiday} and hr_work_entry.name='holiday attendance {rec.id}'
+                                 """
+                           self._cr.execute(qry)
+                       if (not rec.os_in ) and (not rec.os_out ):
+                           qry = f"""
+                                     insert into hr_work_entry
+                                     (name,employee_id,work_entry_type_id,date_start,date_stop,company_id,contract_id,state,active,duration)
+                                     select 'holiday attenance2 {rec.id}' ,hr_employee.id,{cod_holiday2},'{row.get('date_start')}'
+                                     ,'{row.get('date_stop')}',hr_employee.company_id,hr_employee.contract_id,'draft',true,
+                                     EXTRACT(EPOCH FROM (timestamp '{row.get('date_stop')}'-timestamp '{row.get('date_start')}'))/3600
+                                     from od_attpayroll inner join hr_employee on 
+                                     hr_employee.id=od_attpayroll.employee_id
+                                     where od_attpayroll.id={rec.id}
+                                     """
+                           # print('====== >') date_stop
+                           # print(qry)
+                           print('-----99-----3')
+                           self._cr.execute(qry)
+
+      def mcgi3(self,rec, cod_holiday, cod_holiday2,cod_weekend, diff_hour):
+          d1=rec.date_in
+          d2=rec.date_out
+          aux7=datetime.combine(d1.date(), datetime.min.time()) + timedelta(hours=7)
+          aux19 = aux7+ timedelta(hours=19)
+          dateparts = []
+          cycletime=None
+          newday=None
+          startfrom=1
+          # it is obvious that we have always d2 (exit) > d1 (enter)
+          if d2<=aux7: # from 00:00 to 7:00
+              dateparts=[(2, d1, d2)]
+          elif aux7>d1: # enter before 7:00
+              if aux19 >=d2: # exit before 19:00
+                   dateparts=[(2,d1,aux7),(1,aux7,d2)]
+              else: # exit after 19:00 and may be next day(s)
+                   dateparts=[(2,d1, aux7), (1,aux7, aux19)]
+                   cycletime=aux19
+          elif aux7<=d1 and aux19>d1: # enter after 7:00 but before 19:00
+              if aux19 >=d2: # exit before 19:00
+                   dateparts=[(1,d1,d2)]
+              else: # exit after 19:00
+                   dateparts=[(1,d1, aux19)]
+                   cycletime=aux19
+          elif aux19<=d1: # enter after  19:00
+                newday=datetime.combine(d1.date(), datetime.min.time()) + timedelta(hours=24)
+                if d2<=newday:
+                    dateparts = [(2, d1, d2)] # exit after 19:00 but before a new day
+                else:
+                    dateparts = [(2, d1, newday)]
+                    if newday + timedelta(hours=7) >=d2:
+                        dateparts = [(2, d1, newday),(2,newday,d2)]
+                    else:
+                        dateparts = [(2, d1, newday), (2, newday, newday + timedelta(hours=7))]
+                        cycletime=newday + timedelta(hours=7)
+                        startfrom=0
+          if cycletime:
+              while (d2>cycletime+timedelta(hours=7)):
+                  dateparts=dateparts.append((startfrom+1,cycletime,cycletime+timedelta(hours=7)))
+                  startfrom=(startfrom+1) % 2
+              dateparts = dateparts.append((startfrom + 1, cycletime, d2))
+          print(dateparts)
+
+      def mcgi4(self, rec, cod_holiday,cod_holiday2,  cod_weekend, diff_hour,cod_OVT1,cod_OVT2):
+          d1 = rec.date_in
+          d2 = rec.date_out
+          aux7 = datetime.combine(d1.date(), datetime.min.time()) + timedelta(hours=7)+timedelta(hours=diff_hour)
+          aux19 = aux7 + timedelta(hours=12)
+          dateparts = []
+          cycletime = None
+          newday = None
+          startfrom = 1
+          # it is obvious that we have always d2 (exit) > d1 (enter)
+          if d1 > aux19:
+              cycletime = aux19 + timedelta(hours=12)
+          elif d1 < aux7:  # from 00:00 to 7:00
+              cycletime = aux7
+          elif d1 < aux19:  # enter before 7:00
+              cycletime = aux19
+              startfrom = 0
+          else:
+              cycletime = aux19 + timedelta(hours=12)
+          cycletime2 = cycletime
+          startfromc = (startfrom + 1) % 2
+          while (d2 > cycletime2 + timedelta(hours=12)):
+              dateparts = dateparts + [(startfromc + 1, cycletime2, cycletime2 + timedelta(hours=12))]
+              cycletime2 = cycletime2 + timedelta(hours=12)
+              startfromc = (startfromc + 1) % 2
+          if (d2 < aux7) or (d1 > aux19 and d2 < cycletime) or (d1 > aux7 and d2 < aux19):
+              dateparts = [(startfrom + 1, d1, d2)]
+          else:
+              dateparts = [(startfrom + 1, d1, cycletime)] + dateparts + [(startfromc + 1, cycletime2, d2)]
+          dateparts2=[]
+          i=0
+          for item in dateparts:
+              i+=1
+              hdate=item[1].date()
+              unusaldays = rec.employee_id._get_unusual_days(hdate, hdate)
+              isHoliday=False
+              isWeekEnd=False
+              cod_att=cod_holiday
+              nextday = datetime.combine(item[1].date(), datetime.min.time()) + timedelta(hours=24) + timedelta(
+                  hours=diff_hour)
+
+              if unusaldays and len([elem for elem in unusaldays.values() if elem]) > 0:
+                  isHoliday = True
+                  cod_att = cod_holiday2
+                  if not rec.check_holiday(hdate, hdate):
+                      isWeekEnd = True
+                      cod_att = cod_weekend
+              isHoliday2=False
+              isWeekEnd2=False
+              hdate2 = item[2].date()
+              unusaldays2 = rec.employee_id._get_unusual_days(hdate2, hdate2)
+              if unusaldays2 and len([elem for elem in unusaldays2.values() if elem]) > 0:
+                  isHoliday2 = True
+                  print('qyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy')
+
+              if isHoliday:
+                  if hdate==(item[2]).date():
+                      dateparts2=dateparts2+[(cod_att,item[1],item[2])]
+                  else:
+                      newi=[(cod_att, item[1],  nextday  )]
+                      dateparts2 = dateparts2 + newi
+                      item2=self.chk_unusual(rec,nextday)
+                      if item2==0:
+                          cod_att=item[0]
+                      elif item2==1:
+                          cod_att = cod_holiday2
+                      elif item2==2:
+                          cod_att =cod_holiday2 #cod_weekend
+                      dateparts2 = dateparts2 + [
+                              (cod_OVT2, nextday , item[2])]
+
+
+              elif isHoliday2:
+                  cod_att = cod_OVT1 if item[0] == 1 else cod_OVT2
+                  dateparts2 = dateparts2 + [(cod_att, item[1], nextday)]
+                  dateparts2 = dateparts2 + [(cod_holiday2, nextday, item[2])]
+
+              else:
+                  cod_att= cod_OVT1 if item[0]==1 else cod_OVT2
+                  dateparts2=dateparts2+[(cod_att,item[1],item[2])]
+
+          # print('------------------brackets--------------------')
+          # print (dateparts2)
+          for item in dateparts2:
+              qry=f"""
+insert into hr_work_entry
+  (name,employee_id,work_entry_type_id,date_start,date_stop,company_id,contract_id,state,active,duration)
+  values( 'Not in shift {rec.employee_id.id}' ,{rec.employee_id.id},{item[0]},'{item[1]}'
+  ,'{item[2]}',{rec.employee_id.company_id.id},{rec.employee_id.contract_id.id},'draft',true,
+  EXTRACT(EPOCH FROM (timestamp '{item[2]}'-timestamp '{item[1]}'))/3600
+)
+"""
+              # print(qry)
+              self._cr.execute(qry)
+
 
 
 
@@ -588,7 +795,6 @@ class AttPayRoll(models.Model):
           rec_settings = self.env['od.fp.settings'].sudo().search([('setting_name', '=', 'Approval levels')], limit=1)
           if rec_settings:
               lev = rec_settings.setting_value
-          # print(lev)
           self.approval_level=lev
 
 
@@ -613,6 +819,15 @@ class AttPayRoll(models.Model):
               return rec_settings.setting_value
           else:
               return None
+
+      def chk_unusual(self,rec,hdate):
+          unusaldays = rec.employee_id._get_unusual_days(hdate, hdate)
+          cod_att = 0
+          if unusaldays and len([elem for elem in unusaldays.values() if elem]) > 0:
+              cod_att = 1
+              if not rec.check_holiday(hdate, hdate):
+                  cod_att = 2
+
 
       def check_holiday(self, start_dt, end_dt, resources=None, domain=None, tz=None):
           """ Return the leave intervals in the given datetime range.
