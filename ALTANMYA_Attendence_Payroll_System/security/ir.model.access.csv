@@ -1,0 +1,17 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+od_device,od.device,model_od_device,ALTANMYA_Attendence_Payroll_System.altanmya_fgp_hr,1,1,1,0
+od_attendance,od.attendance,model_od_attendance,ALTANMYA_Attendence_Payroll_System.altanmya_fgp_hr,1,1,1,0
+od_inout,od.inout,model_od_inout,ALTANMYA_Attendence_Payroll_System.altanmya_fgp_hr,1,1,1,0
+fp_logerror,fp.logerror,model_fp_logerror,ALTANMYA_Attendence_Payroll_System.altanmya_fgp_hr,1,1,1,0
+od_fp_settings,od.fp.settings,model_od_fp_settings,ALTANMYA_Attendence_Payroll_System.altanmya_fgp_hr,1,1,1,0
+od_attpayroll,od.attpayroll,model_od_attpayroll,ALTANMYA_Attendence_Payroll_System.altanmya_fgp_hr,1,1,1,0
+od_device_admin,od.device,model_od_device,ALTANMYA_Attendence_Payroll_System.altanmya_fgp_admin,1,1,1,1
+od_attendance_admin,od.attendance,model_od_attendance,ALTANMYA_Attendence_Payroll_System.altanmya_fgp_admin,1,1,1,1
+od_inout_admin,od.inout,model_od_inout,ALTANMYA_Attendence_Payroll_System.altanmya_fgp_admin,1,1,1,1
+fp_logerror_admin,fp.logerror,model_fp_logerror,ALTANMYA_Attendence_Payroll_System.altanmya_fgp_admin,1,1,1,1
+od_fp_settings_admin,od.fp.settings,model_od_fp_settings,ALTANMYA_Attendence_Payroll_System.altanmya_fgp_admin,1,1,1,1
+od_attpayroll_admin,od.attpayroll,model_od_attpayroll,ALTANMYA_Attendence_Payroll_System.altanmya_fgp_admin,1,1,1,1
+od_attpayroll_manager,od.attpayroll,model_od_attpayroll,ALTANMYA_Attendence_Payroll_System.altanmya_fgp_manager,1,1,1,0
+emp_date_log_hr,emp.date.log,model_emp_date_log,ALTANMYA_Attendence_Payroll_System.altanmya_fgp_hr,1,1,1,0
+emp_date_log_admin,emp.date.log,model_emp_date_log,ALTANMYA_Attendence_Payroll_System.altanmya_fgp_admin,1,1,1,0
+

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+        <record id="att_dl_devices" model="ir.actions.server">
+            <field name="name">synchronize device</field>
+            <field name="model_id" ref="ALTANMYA_Attendence_Payroll_System.model_od_attendance"/>
+            <field name="type">ir.actions.server</field>
+            <field name="state">code</field>
+            <field name="code">action = model.action_start()</field>
+        </record>
+        <record id="att_process" model="ir.actions.server">
+            <field name="name">action_process</field>
+            <field name="model_id" ref="ALTANMYA_Attendence_Payroll_System.model_od_attendance"/>
+            <field name="type">ir.actions.server</field>
+            <field name="state">code</field>
+            <field name="code">action = model.action_process()</field>
+        </record>
+        <record id="att_process_transfer" model="ir.actions.server">
+            <field name="name">action_transfer</field>
+            <field name="model_id" ref="ALTANMYA_Attendence_Payroll_System.model_od_attendance"/>
+            <field name="type">ir.actions.server</field>
+            <field name="state">code</field>
+            <field name="code">action = model.action_transfer()</field>
+        </record>
+
+         <record id="att_process_payroll" model="ir.actions.server">
+            <field name="name">action_processp</field>
+            <field name="model_id" ref="ALTANMYA_Attendence_Payroll_System.model_od_attpayroll"/>
+            <field name="type">ir.actions.server</field>
+            <field name="state">code</field>
+            <field name="code">action = model.action_transfer()</field>
+        </record>
+
+
+
+     <record id="od_device_action" model="ir.actions.act_window">
+            <field name="name">od.device.allview</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">od.device</field>
+            <field name="view_mode">tree,kanban,form</field>
+
+            <field name="help" type="html">
+                 <p>
+                         this application is designed only for test purpose
+                 </p>
+            </field>
+    </record>
+
+    <record id="attend_log_open_action" model="ir.actions.act_window">
+        <field name="name">od.attendance.form</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">od.attendance</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="help" type="html">
+             <p>
+                     this application is designed only for test purpose
+             </p>
+        </field>
+    </record>
+
+    <record id="attend_inout_action" model="ir.actions.act_window">
+        <field name="name">IN / OUT </field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">od.inout</field>
+        <field name="view_mode">tree,kanban,form</field>
+    </record>
+
+    <record id="attend_error_action" model="ir.actions.act_window">
+        <field name="name">logerror form</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">fp.logerror</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="attend_fg_open_action" model="ir.actions.act_window">
+        <field name="name">Open settings</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">od.fp.settings</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+
+    <record id="attend_payroll_action" model="ir.actions.act_window">
+        <field name="name">Payroll migration</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">od.attpayroll</field>
+        <field name="view_mode">tree,kanban,form</field>
+    </record>
+
+</data>
+</odoo>

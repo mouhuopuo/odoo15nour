@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <odoo>
+    <data >
+         <record id="work_entry_type_CT_ATTEND" model="hr.work.entry.type">
+            <field name="name">attendance</field>
+            <field name="code">ATTEND</field>
+            <field name="sequence">100</field>
+            <field name="is_leave" eval="False" />
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+             <field name="color">3</field>
+         </record>
+
+         <record id="work_entry_type_CT_LATE" model="hr.work.entry.type">
+            <field name="name">late</field>
+            <field name="code">LATE</field>
+            <field name="sequence">101</field>
+            <field name="is_leave">False</field>
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+         </record>
+         <record id="work_entry_type_CT_ERLYOUT" model="hr.work.entry.type">
+            <field name="name">early exit</field>
+            <field name="code">ERLYOUT</field>
+            <field name="sequence">102</field>
+            <field name="is_leave">False</field>
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+         </record>
+         <record id="work_entry_type_CT_ERLYIN" model="hr.work.entry.type">
+            <field name="name">early enter</field>
+            <field name="code">ERLYIN</field>
+            <field name="sequence">103</field>
+            <field name="is_leave">False</field>
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+         </record>
+         <record id="work_entry_type_CT_ERLYIN2" model="hr.work.entry.type">
+            <field name="name">early enter2</field>
+            <field name="code">ERLYIN2</field>
+            <field name="sequence">113</field>
+            <field name="is_leave">False</field>
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+         </record>
+         <record id="work_entry_type_CT_OVT1" model="hr.work.entry.type">
+            <field name="name">overtime</field>
+            <field name="code">OVT1</field>
+            <field name="sequence">104</field>
+            <field name="is_leave">False</field>
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+         </record>
+         <record id="work_entry_type_CT_OVT2" model="hr.work.entry.type">
+            <field name="name">overtime2</field>
+            <field name="code">OVT2</field>
+            <field name="sequence">105</field>
+            <field name="is_leave">False</field>
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+         </record>
+         <record id="work_entry_type_CT_OVT3" model="hr.work.entry.type">
+            <field name="name">overtime3</field>
+            <field name="code">OVT3</field>
+            <field name="sequence">120</field>
+            <field name="is_leave">False</field>
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+         </record>
+         <record id="work_entry_type_CT_OVT4" model="hr.work.entry.type">
+            <field name="name">overtime4</field>
+            <field name="code">OVT4</field>
+            <field name="sequence">121</field>
+            <field name="is_leave">False</field>
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+         </record>
+         <record id="work_entry_type_CT_ABSENT" model="hr.work.entry.type">
+            <field name="name">absent</field>
+            <field name="code">ABSENT</field>
+            <field name="sequence">106</field>
+            <field name="is_leave">False</field>
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+         </record>
+         <record id="work_entry_type_CT_WEEKATT" model="hr.work.entry.type">
+            <field name="name">weekend attendance</field>
+            <field name="code">WEEKATT</field>
+            <field name="sequence">107</field>
+            <field name="is_leave">False</field>
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+         </record>
+         <record id="work_entry_type_CT_HOLATT" model="hr.work.entry.type">
+            <field name="name">holiday attendance</field>
+            <field name="code">HOLATT</field>
+            <field name="sequence">108</field>
+            <field name="is_leave">False</field>
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+         </record>
+         <record id="work_entry_type_CT_HOLATT2" model="hr.work.entry.type">
+            <field name="name">holiday attendance2</field>
+            <field name="code">HOLATT2</field>
+            <field name="sequence">109</field>
+            <field name="is_leave">False</field>
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+         </record>
+         <record id="work_entry_type_CT_LATE2" model="hr.work.entry.type">
+            <field name="name">late2</field>
+            <field name="code">LATE2</field>
+            <field name="sequence">110</field>
+            <field name="is_leave">False</field>
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+         </record>
+         <record id="work_entry_type_CT_HOLYDAY" model="hr.work.entry.type">
+            <field name="name">holiday</field>
+            <field name="code">HOLIDAY</field>
+            <field name="sequence">111</field>
+            <field name="is_leave">False</field>
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+         </record>
+         <record id="work_entry_type_CT_WEEKEND" model="hr.work.entry.type">
+            <field name="name">weekend</field>
+            <field name="code">WEEKEND</field>
+            <field name="sequence">112</field>
+            <field name="is_leave">False</field>
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+         </record>
+
+<!--        <delete id="work_entry_type_CT_HOLATT2" model="hr.work.entry.type"/>-->
+<!--        <delete id="work_entry_type_CT_HOLATT3" model="hr.work.entry.type"/>-->
+
+         <record id="Attendance_source_mode" model="od.fp.settings">
+            <field name="setting_name">Source mode</field>
+            <field name="setting_value">0</field>
+         </record>
+         <record id="Attendance_attendance_seq" model="od.fp.settings">
+            <field name="setting_name">Attendance Seq</field>
+            <field name="setting_value">-1</field>
+         </record>
+
+    </data>
+
+    </odoo>

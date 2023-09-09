@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+        <menuitem
+            id="fgdevice_root"
+            name="Finger devices"
+            sequence="0"/>
+
+        <menuitem
+            id="fgd_menu_root"
+            name="Attendance"
+            parent="fgdevice_root"
+            sequence="10"/>
+        <menuitem
+            id="fgd_menu_attdownload"
+            name="Download"
+            parent="fgdevice_root"
+            action="att_dl_devices"
+            sequence="15"/>
+        <menuitem
+            id="fgd_menu_atthandle"
+            name="Process Attendance"
+            parent="fgdevice_root"
+            action="att_process"
+            sequence="16"/>
+
+        <menuitem
+            id="fgd_menu_transfer"
+            name="Transfer Attendance"
+            parent="fgdevice_root"
+            action="att_process_transfer"
+            sequence="17"/>
+
+        <menuitem
+            id="fgd_menu_transfer"
+            name="Process Payroll"
+            parent="fgdevice_root"
+            action="att_process_payroll"
+            groups="ALTANMYA_Attendence_Payroll_System.altanmya_fgp_admin,ALTANMYA_Attendence_Payroll_System.altanmya_fgp_hr"
+            sequence="17"/>
+
+        <menuitem
+            id="fgd_menu_transferAttendance"
+            name="Transfer to Attendance"
+            parent="fgdevice_root"
+            action="att_process_transfer"
+            sequence="18"/>
+
+        <menuitem
+            id="fgd_device_zk"
+            name="Devices"
+            parent="fgd_menu_root"
+            action="od_device_action"
+            sequence="20"
+        />
+        <menuitem
+            id="fgd_attendance"
+            name="Attendance log"
+            parent="fgd_menu_root"
+            action="attend_log_open_action"
+            sequence="25"
+         />
+        <menuitem
+            id="fgd_inout"
+            name="Attendance in-out log"
+            parent="fgd_menu_root"
+            action="attend_inout_action"
+            sequence="30"
+         />
+
+            <menuitem
+            id="fgd_logerror"
+            name="Device error"
+            parent="fgd_menu_root"
+            action="attend_error_action"
+            sequence="40"
+         />
+            <menuitem
+            id="fgd_settings"
+            name="FP Settings"
+            parent="fgd_menu_root"
+            action="attend_fg_open_action"
+            sequence="50"
+         />
+            <menuitem
+            id="fgd_menu_payroll"
+            name="Attendance Payroll"
+            parent="fgd_menu_root"
+            action="attend_payroll_action"
+            sequence="60"/>
+
+</data>
+</odoo>

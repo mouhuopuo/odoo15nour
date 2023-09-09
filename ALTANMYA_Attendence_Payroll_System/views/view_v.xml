@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data noupdate="0">
+
+    <record id="view_device_log_error" model="ir.ui.view">
+            <field name="name">fp.logerror.tree</field>
+            <field name="model">fp.logerror</field>
+            <field name="arch" type="xml">
+                <tree string="Device errors">
+                    <field name="log_date"/>
+                    <field name="log_device"/>
+                    <field name="device_error"/>
+                </tree>
+            </field>
+   </record>
+
+    <record id="view_device_tree" model="ir.ui.view">
+            <field name="name">od.device.tree</field>
+            <field name="model">od.device</field>
+            <field name="arch" type="xml">
+                <tree string="All devices">
+
+                    <field name="device_name"/>
+                    <field name="device_model"/>
+                    <field name="device_port"/>
+                    <field name="device_enables"/>
+                    <field name="last_seq"/>
+
+                </tree>
+            </field>
+   </record>
+
+    <record id="view_attend_tree" model="ir.ui.view">
+            <field name="name">od.attendance.tree</field>
+            <field name="model">od.attendance</field>
+            <field name="arch" type="xml">
+                <tree string="Attendance table">
+                    <field name="log_seq"/>
+                    <field name="log_userid"/>
+                    <field name="log_date"/>
+                    <field name="log_device"/>
+
+                </tree>
+            </field>
+        </record>
+
+    <record id="view_attend_treated_tree" model="ir.ui.view">
+            <field name="name">od.attend.treat.tree</field>
+            <field name="model">od.inout</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree string="Attendance in out table">
+                    <field name="emp_deviceno"/>
+                    <field name="matching_flag"  invisible="1"  />
+                    <field name="emp_name" decoration-danger="emp_name in ('NOT DEFINED!!','TOO MANY EMP!!') "/>
+                    <field name="date_in" decoration-danger = " ((not (date_out)) ) " decoration-warning="date_inflag == 'setting'"  decoration-success="date_inflag == 'internal'"  />
+                    <field name="date_out" decoration-danger = " ((not (date_in)) or matching_flag==True) " decoration-bf=" matching_flag == True "  decoration-warning="date_outflag == 'setting'" decoration-success="date_outflag == 'internal'"  />
+                    <field name="date_inflag" widget="badge" decoration-warning="date_inflag == 'setting' " decoration-success="date_inflag == 'internal'" />
+                    <field name="date_outflag"  widget="badge" decoration-warning="date_outflag == 'setting'" decoration-success="date_outflag == 'internal'"  />
+                    <field name="shift_id"/>
+
+                </tree>
+            </field>
+    </record>
+
+    <record id="view_attend_treated_search" model="ir.ui.view">
+            <field name="name">od.attend.treat.search</field>
+            <field name="model">od.inout</field>
+            <field name="type">search</field>
+            <field name="arch" type="xml">
+                <search string="Warning time" >
+                    <separator />
+                    <filter name="warnings" string="warnings" domain="[('matching_flag','=','True')]" />
+                </search>
+            </field>
+    </record>
+
+    <record id="view_attend_treated_form" model="ir.ui.view">
+        <field name="name">od.attend.treat.form</field>
+        <field name="model">od.inout</field>
+        <field name="type">form</field>
+        <field name="arch" type="xml">
+            <form string="In/out ">
+                <sheet string="In/out">
+                    <group >
+                        <field name="emp_deviceno"/>
+                        <field name="matching_flag"  invisible="1"  />
+                        <field name="emp_name" decoration-danger="emp_name in ('NOT DEFINED!!','TOO MANY EMP!!') "/>
+                        <field name="date_in" decoration-danger = " ((not (date_out)) ) " decoration-warning="date_inflag == 'setting'"  decoration-success="date_inflag == 'internal'"  />
+                        <field name="date_out" decoration-danger = " ((not (date_in)) or matching_flag==True) " decoration-bf=" matching_flag == True "  decoration-warning="date_outflag == 'setting'" decoration-success="date_outflag == 'internal'"  />
+                        <field name="date_inflag" widget="badge" decoration-warning="date_inflag == 'setting' " decoration-success="date_inflag == 'internal'" />
+                        <field name="date_outflag"  widget="badge" decoration-warning="date_outflag == 'setting'" decoration-success="date_outflag == 'internal'"  />
+                        <field name="shift_id"/>
+                    </group>
+                    <notebook>
+                        <page string="prints log">
+                            <field name="log_lines">
+                                <tree>
+                                    <field name="log_seq"/>
+                                    <field name="log_date"/>
+                                    <field name="log_device"/>
+
+                                </tree>
+
+                            </field>
+                        </page>
+                    </notebook>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="view_attend_config_settings" model="ir.ui.view">
+            <field name="name">Configuration</field>
+            <field name="model">od.fp.settings</field>
+            <field name="arch" type="xml">
+                <tree string="All Settings">
+
+                    <field name="setting_name"/>
+                    <field name="setting_value"/>
+                    <field name="setting_value_text"/>
+
+                </tree>
+            </field>
+   </record>
+
+    <record id="tanHrEmpAttMode_inherit" model="ir.ui.view">
+        <field name="name">tanHrEmpAttMode.inherit</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='pin']" position="after" >
+               <field name="att_mode"/>
+               <field name="studio_employee_number"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="resourcecalendarattendance_inherit" model="ir.ui.view">
+        <field name="name">resourcecalendarattendance.inherit</field>
+        <field name="model">resource.calendar.attendance</field>
+        <field name="inherit_id" ref="resource.view_resource_calendar_attendance_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='hour_to']" position="after" >
+               <field name="duration"/>
+               <field name="tol_in_early"/>
+               <field name="tol_in_late"/>
+               <field name="tol_out_early"/>
+               <field name="tol_out_over"/>
+               <field name="overtime2"/>
+               <field name="early_overtime2"/>
+            </xpath>
+        </field>
+    </record>
+
+
+    <record id="frmresourcecalendar_inherit" model="ir.ui.view">
+        <field name="name">resourcecalendar.inherit</field>
+        <field name="model">resource.calendar</field>
+        <field name="inherit_id" ref="resource.resource_calendar_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='tz']" position="after" >
+               <field name="late_enter"/>
+               <field name="late_enter2"/>
+               <field name="early_exit"/>
+               <field name="early_overtime"/>
+               <field name="overtime1"/>
+               <field name="overtime2"/>
+               <field name="enable_full_salary"/>
+               <field name="full_duration"/>
+               <field name="full_time"/>
+                <field name="tol_in_early"/>
+               <field name="tol_in_late"/>
+               <field name="tol_out_early"/>
+               <field name="tol_out_over"/>
+            </xpath>
+        </field>
+    </record>
+
+
+
+
+    <record id="view_attend_payroll" model="ir.ui.view">
+            <field name="name">od.attpayroll.tree</field>
+            <field name="model">od.attpayroll</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree string="Attendance payroll">
+                    <field name="employee_id"/>
+                    <field name="date_in"  />
+                    <field name="diff_entry"  />
+                    <button name="btn_ok" class="fa fa-check" type="object" attrs="{'invisible': [('show_in','=',False)]}" />
+<!--                    <button name="btn_ok_u2" class="fa fa-check" type="object" attrs="{'invisible': [('status_u2','not in',('draft'))]}" />-->
+                    <button name="btn_no" class="fa fa-times"  type="object" attrs="{'invisible': [('show_in','=',False)]}"  />
+<!--                    <button name="btn_no_u2" class="fa fa-times"  type="object" attrs="{'invisible': [('status_u2','not in',('draft'))]}"  />-->
+                    <field name="date_out"   />
+                    <field name="diff_Exit"  />
+                    <button name="btn_ok2" class="fa fa-check" type="object" attrs="{'invisible': [('show_out','=',False)]}" />
+<!--                    <button name="btn_ok2_u2" class="fa fa-check" type="object" attrs="{'invisible': [('status2_u2','not in',('draft'))]}" />-->
+                    <button name="btn_no2" class="fa fa-times"  type="object" attrs="{'invisible': [('show_out','=',False)]}"  />
+<!--                    <button name="btn_no2_u2" class="fa fa-times"  type="object" attrs="{'invisible': [('status2_u2','not in',('draft'))]}"  />-->
+                    <field name="shift_id"/>
+                    <field name="show_in" invisible="1"/>
+                    <field name="show_out" invisible="1"/>
+<!--                    <field name="status_u2" invisible="1"/>-->
+<!--                    <field name="status2_u2" invisible="1"/>-->
+                </tree>
+            </field>
+    </record>
+
+    <record id="view_attend_payroll_Form" model="ir.ui.view">
+            <field name="name">od.attpayroll.form</field>
+            <field name="model">od.attpayroll</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Emp attendance">
+                    <sheet name="emp_attendance">
+                        <field name="employee_id"/>
+                        <field name="date_in"  />
+                        <field name="diff_entry"  />
+                        <button name="btn_ok" class="fa fa-check" type="object" attrs="{'invisible': [('show_in','=',False)]}" />
+    <!--                    <button name="btn_ok_u2" class="fa fa-check" type="object" attrs="{'invisible': [('status_u2','not in',('draft'))]}" />-->
+                        <button name="btn_no" class="fa fa-times"  type="object" attrs="{'invisible': [('show_in','=',False)]}"  />
+    <!--                    <button name="btn_no_u2" class="fa fa-times"  type="object" attrs="{'invisible': [('status_u2','not in',('draft'))]}"  />-->
+                        <field name="date_out"   />
+                        <field name="diff_Exit"  />
+                        <button name="btn_ok2" class="fa fa-check" type="object" attrs="{'invisible': [('show_out','=',False)]}" />
+    <!--                    <button name="btn_ok2_u2" class="fa fa-check" type="object" attrs="{'invisible': [('status2_u2','not in',('draft'))]}" />-->
+                        <button name="btn_no2" class="fa fa-times"  type="object" attrs="{'invisible': [('show_out','=',False)]}"  />
+    <!--                    <button name="btn_no2_u2" class="fa fa-times"  type="object" attrs="{'invisible': [('status2_u2','not in',('draft'))]}"  />-->
+                        <field name="shift_id"/>
+                        <field name="show_in" invisible="1"/>
+                        <field name="show_out" invisible="1"/>
+                    </sheet>
+                </form>
+            </field>
+
+    </record>
+
+    <record id="model_od_attpayroll_reject_in" model="ir.actions.server">
+        <field name="name">Reject (In) selection </field>
+        <field name="model_id" ref="ALTANMYA_Attendence_Payroll_System.model_od_attpayroll"/>
+        <field name="binding_model_id" ref="ALTANMYA_Attendence_Payroll_System.model_od_attpayroll"/>
+        <field name="binding_view_types">form,list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.btn_no()</field>
+    </record>
+    <record id="model_od_attpayroll_validate_in" model="ir.actions.server">
+        <field name="name">Validate (In) selection </field>
+        <field name="model_id" ref="ALTANMYA_Attendence_Payroll_System.model_od_attpayroll"/>
+        <field name="binding_model_id" ref="ALTANMYA_Attendence_Payroll_System.model_od_attpayroll"/>
+        <field name="binding_view_types">form,list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.btn_ok()</field>
+    </record>
+
+    <record id="model_od_attpayroll_reject_out" model="ir.actions.server">
+        <field name="name">Reject (Out) selection </field>
+        <field name="model_id" ref="ALTANMYA_Attendence_Payroll_System.model_od_attpayroll"/>
+        <field name="binding_model_id" ref="ALTANMYA_Attendence_Payroll_System.model_od_attpayroll"/>
+        <field name="binding_view_types">form,list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.btn_no2()</field>
+    </record>
+    <record id="model_od_attpayroll_validate_out" model="ir.actions.server" >
+        <field name="name">Validate (Out) selection </field>
+        <field name="model_id" ref="ALTANMYA_Attendence_Payroll_System.model_od_attpayroll"/>
+        <field name="binding_model_id" ref="ALTANMYA_Attendence_Payroll_System.model_od_attpayroll"/>
+        <field name="binding_view_types">form,list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.btn_ok2()</field>
+    </record>
+
+    <record id="module_ALTANMYA_Attendence_Payroll_System" model="ir.module.category">
+        <field name="name">ALTANMYA Attendance Device Adaptor</field>
+        <field name="description">Helps you manage approvals on attendance</field>
+        <field name="sequence">10</field>
+    </record>
+
+     <record model="res.groups" id="altanmya_fgp_admin">
+         <field name="name">Fgp admin</field>
+         <field name="category_id" ref="module_ALTANMYA_Attendence_Payroll_System" />
+     </record>
+     <record model="res.groups" id="altanmya_fgp_manager">
+         <field name="name">Fgp manager</field>
+         <field name="category_id" ref="module_ALTANMYA_Attendence_Payroll_System" />
+     </record>
+     <record model="res.groups" id="altanmya_fgp_hr">
+         <field name="name">Fgp Hr officer</field>
+         <field name="category_id" ref="module_ALTANMYA_Attendence_Payroll_System" />
+     </record>
+
+<!--     <record model="ir.rule" id="fg_manager_user">-->
+<!--         <field name="name">Show only subordinates</field>-->
+<!--        <field name="model_id" search="[('model','=','od.attpayroll')]" model="ir.model"/>-->
+<!--        <field name="domain_force">['|' ,'|' ,(user.has_group('ALTANMYA_Attendence_Payroll_System.altanmya_fgp_admin'),'=',True),(user.has_group('ALTANMYA_Attendence_Payroll_System.altanmya_fgp_hr'),'=',True),'&amp;',('employee_id.parent_id.user_id', '=', user.id),(user.has_group('ALTANMYA_Attendence_Payroll_System.altanmya_fgp_manager'),'=',True)]</field>-->
+<!--        <field name="groups" eval="[Command.link(ref('ALTANMYA_Attendence_Payroll_System.altanmya_fgp_admin')), Command.link(ref('ALTANMYA_Attendence_Payroll_System.altanmya_fgp_hr')), Command.link(ref('ALTANMYA_Attendence_Payroll_System.altanmya_fgp_manager'))]"/>-->
+<!--     </record>-->
+     <record model="ir.rule" id="fg_manager_user">
+         <field name="name">Show only subordinates</field>
+        <field name="model_id" search="[('model','=','od.attpayroll')]" model="ir.model"/>
+        <field name="domain_force">['|' ,'|' ,(user.has_group('ALTANMYA_Attendence_Payroll_System.altanmya_fgp_admin'),'=',True),(user.has_group('ALTANMYA_Attendence_Payroll_System.altanmya_fgp_hr'),'=',True),'&amp;',('employee_id.parent_id.user_id', '=', user.id),(user.has_group('ALTANMYA_Attendence_Payroll_System.altanmya_fgp_manager'),'=',True)]</field>
+        <field name="groups"   eval="[(4, ref('ALTANMYA_Attendence_Payroll_System.altanmya_fgp_admin')),(4, ref('ALTANMYA_Attendence_Payroll_System.altanmya_fgp_hr')),(4, ref('ALTANMYA_Attendence_Payroll_System.altanmya_fgp_manager'))]"  />
+     </record>
+
+
+    </data>
+    <data noupdate="1">
+     <record model="od.fp.settings" id="altanmya_fgp_approval_level">
+         <field name="setting_name">Approval levels</field>
+         <field name="setting_value">1</field>
+     </record>
+     <record model="od.fp.settings" id="altanmya_fgp_warning_duration">
+         <field name="setting_name">warning duration</field>
+         <field name="setting_value">1</field>
+     </record>
+    </data>
+
+    </odoo>

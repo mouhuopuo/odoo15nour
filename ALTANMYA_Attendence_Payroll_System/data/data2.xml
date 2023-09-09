@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <odoo>
+        <data >
+             <record id="work_entry_type_CT_ERLYIN2" model="hr.work.entry.type">
+                <field name="name">early enter2</field>
+                <field name="code">ERLYIN2</field>
+                <field name="sequence">113</field>
+                <field name="is_leave">False</field>
+                <field name="round_days">NO</field>
+                <field name="round_days_type">DOWN</field>
+             </record>
+         <record id="work_entry_type_CT_WEEKATT" model="hr.work.entry.type">
+            <field name="name">weekend attendance</field>
+            <field name="code">WEEKATT</field>
+            <field name="sequence">107</field>
+            <field name="is_leave">False</field>
+            <field name="round_days">NO</field>
+            <field name="round_days_type">DOWN</field>
+         </record>
+        </data>
+    </odoo>
